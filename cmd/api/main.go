@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
 	"miniApi_BRM/internal/db"
 	httpHandler "miniApi_BRM/internal/http"
@@ -10,6 +11,7 @@ import (
 	"miniApi_BRM/internal/service"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -23,7 +25,8 @@ func main() {
 		User:     getEnv("DB_USER", "root"),
 		Password: getEnv("DB_PASSWORD", ""),
 		Database: getEnv("DB_NAME", "defaultdb"),
-		SSLMode:  "REQUIRED",
+		TLS:      getEnv("DB_TLS", "verify"),
+		SSLCA:    getEnv("DB_SSL_CA", "internal/db/certs/aiven-ca.pem"),
 	}
 
 	database, err := db.NewConnection(dbConfig)
@@ -32,23 +35,34 @@ func main() {
 	}
 	defer database.Close()
 
+	if err := db.Apply(database); err != nil {
+		log.Fatalf("Error aplicando migraciones: %v", err)
+	}
+
 	userRepo := repository.NewMySQLUserRepository(database)
 	userService := service.NewUserService(userRepo)
 	userHandler := httpHandler.NewUserHandler(userService)
 
 	router := mux.NewRouter()
-
 	router.HandleFunc("/users", userHandler.CreateUser).Methods("POST")
 	router.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
 	router.HandleFunc("/users/{id}", userHandler.GetUserByID).Methods("GET")
 	router.HandleFunc("/users/{id}", userHandler.UpdateUser).Methods("PUT")
 	router.HandleFunc("/users/{id}", userHandler.DeleteUser).Methods("DELETE")
-
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	}).Methods("GET")
 
-	log.Println(" Servidor iniciado en http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	port := getEnv("SERVER_PORT", "8080")
+	log.Printf("Servidor iniciado en http://localhost:%s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
+}
+
+func getEnv(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
 }
