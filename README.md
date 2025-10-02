@@ -20,7 +20,7 @@ El proyecto sigue una arquitectura en capas:
 
 ```
 miniApi_BRM/
-├── cmd/api/          # Punto de entrada de la aplicación
+├── cmd/api/          
 ├── internal/
 │   ├── domain/       # Modelos de dominio
 │   ├── repository/   # Capa de acceso a datos (Patrón Repository)
@@ -66,7 +66,7 @@ http://localhost:8080
 | 3 | GET    | `/users/{id}`  | Obtener usuario por ID   |
 | 4 | PUT    | `/users/{id}`  | Actualizar usuario       |
 | 5 | DELETE | `/users/{id}`  | Eliminar usuario         |
-| 6 | GET    | `/health`      | Health check             |
+
 
 ### COMO USAR:
 #### 1. Crear Usuario
@@ -128,7 +128,7 @@ GET /users/{id}
 #### 4. Actualizar usuario
 ```http
 PUT /users/{id}
-Content-Type: application/json
+
 
 {
   "name": "Sergio Socha actualizado",
