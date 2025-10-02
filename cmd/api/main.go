@@ -13,13 +13,16 @@ import (
 )
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Println("No se encontró archivo .env, usando variables de entorno del sistema")
+	}
 
 	dbConfig := db.Config{
-		Host:     "usersapi-miniapi01.j.aivencloud.com",
-		Port:     "20927",
-		User:     "avnadmin",
-		Password: "******",
-		Database: "defaultdb",
+		Host:     getEnv("DB_HOST", "localhost"),
+		Port:     getEnv("DB_PORT", "3306"),
+		User:     getEnv("DB_USER", "root"),
+		Password: getEnv("DB_PASSWORD", ""),
+		Database: getEnv("DB_NAME", "defaultdb"),
 		SSLMode:  "REQUIRED",
 	}
 
