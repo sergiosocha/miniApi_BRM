@@ -7,16 +7,16 @@ API  básica desarrollada en Go para la gestión de usuarios.
 
 - CRUD completo de usuarios
 - Arquitectura usada:  en capas
-- Patrón:  Repository
-- Base de datos MySQL:  (Aiven)
-- Docker y Docker Compose
-- Código documentado
+- Patrón de diseño:  Repository
+- Base de datos MySQL:  Implementada con Aiven datos de conexión en el file .env
+- Dockerfile
+- Código documentado, tanto con uso como aprendizajes del proyecto
 
 
-## Arquitectura
+## Arquitectura del proyecto
 
 
-El proyecto sigue una arquitectura en capas:
+El proyecto sigue una arquitectura en capas, esto con el fin de mejorar el orden e identificar más facilmente elementos:
 
 ```
 miniApi_BRM/
@@ -47,6 +47,17 @@ go mod download
 ```bash
 
     go run cmd/api/main.go
+```
+
+3. Opcional ejecutar desde docker:
+```bash
+    docker build -t miniapi .
+    docker run --rm -p 8080:8080 miniapi
+```
+
+3. Visualizar desde Postman o navegador a traves de:
+```bash
+    http://localhost:8080/users
 ```
 ## Documentación uso de API
 

@@ -15,7 +15,8 @@ import (
 )
 
 func main() {
-	if err := godotenv.Load(); err != nil {
+	err := godotenv.Load()
+	if err != nil {
 		log.Println("No se encontró archivo .env, usando variables de entorno del sistema")
 	}
 
@@ -26,8 +27,10 @@ func main() {
 		Password: getEnv("DB_PASSWORD", ""),
 		Database: getEnv("DB_NAME", "defaultdb"),
 		TLS:      getEnv("DB_TLS", "verify"),
-		SSLCA:    getEnv("DB_SSL_CA", "internal/db/certs/aiven-ca.pem"),
+		SSLCA:    getEnv("DB_SSL_CA", "/ca.pem"),
 	}
+
+	log.Printf("Conectando a: %s:%s@%s:%s/%s", dbConfig.User, "****", dbConfig.Host, dbConfig.Port, dbConfig.Database)
 
 	database, err := db.NewConnection(dbConfig)
 	if err != nil {
@@ -35,28 +38,28 @@ func main() {
 	}
 	defer database.Close()
 
-	if err := db.Apply(database); err != nil {
-		log.Fatalf("Error aplicando migraciones: %v", err)
-	}
-
 	userRepo := repository.NewMySQLUserRepository(database)
 	userService := service.NewUserService(userRepo)
 	userHandler := httpHandler.NewUserHandler(userService)
 
 	router := mux.NewRouter()
+
 	router.HandleFunc("/users", userHandler.CreateUser).Methods("POST")
 	router.HandleFunc("/users", userHandler.GetAllUsers).Methods("GET")
 	router.HandleFunc("/users/{id}", userHandler.GetUserByID).Methods("GET")
 	router.HandleFunc("/users/{id}", userHandler.UpdateUser).Methods("PUT")
 	router.HandleFunc("/users/{id}", userHandler.DeleteUser).Methods("DELETE")
+
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	}).Methods("GET")
 
 	port := getEnv("SERVER_PORT", "8080")
-	log.Printf("Servidor iniciado en http://localhost:%s\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, router))
+	addr := "0.0.0.0:" + port
+	log.Printf("Servidor iniciado en http://%s\n", addr)
+	log.Fatal(http.ListenAndServe(addr, router))
+
 }
 
 func getEnv(key, defaultValue string) string {
